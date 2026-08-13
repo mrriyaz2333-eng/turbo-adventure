@@ -1,0 +1,3 @@
+If you cannot see the hidden .github folder on your phone:
+Open GitHub -> repository -> Actions -> New workflow -> set up a workflow yourself.
+Paste the contents of .github/workflows/build-apk.yml from this ZIP, then commit.
