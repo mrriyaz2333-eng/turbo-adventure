@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard</title>
+<style>
+:root{--primary:#4361ee;--dark:#212529;--gray:#6c757d;--white:#fff}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;min-height:100%}
+body{font-family:Arial,sans-serif;background:#f5f7fa;color:#333}
+button{font-family:inherit}
+.header{height:64px;background:#fff;box-shadow:0 2px 8px #00000018;position:fixed;top:0;left:0;right:0;z-index:1000}
+.header .container{height:64px;display:flex;align-items:center;justify-content:space-between}
+.container{width:100%;max-width:1200px;margin:auto;padding:0 15px}
+.header-left,.header-actions{display:flex;align-items:center;gap:12px}
+.header-title{font-size:20px;font-weight:600;display:flex;align-items:center;gap:8px}
+.btn{border:0;background:transparent;cursor:pointer}
+.btn-icon{width:40px;height:40px;border-radius:50%;font-size:20px}
+.btn-icon:hover{background:#f0f2f5}
+.menu-icon{font-size:25px;line-height:1}
+.sidebar{position:fixed;top:64px;left:0;bottom:0;width:250px;background:#fff;box-shadow:2px 0 8px #00000014;z-index:900;transition:left .2s ease;overflow-y:auto}
+.sidebar.active{left:-250px}
+.sidebar-menu{list-style:none;padding:12px 0}
+.sidebar-link{display:flex;align-items:center;gap:12px;padding:14px 20px;color:var(--gray);text-decoration:none}
+.sidebar-link:hover,.sidebar-link.active{background:#eef1ff;color:var(--primary)}
+.sidebar-link.active{font-weight:600;border-right:3px solid var(--primary)}
+.main-content{margin-top:64px;margin-left:250px;padding:22px 20px;transition:margin-left .2s ease}
+.main-content.full-width{margin-left:0}
+.page-title{font-size:24px;margin-bottom:22px;display:flex;align-items:center;gap:9px}
+.page-title-icon{color:var(--primary)}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}
+.stat-card,.card{background:#fff;border-radius:12px;box-shadow:0 3px 10px #0000000d}
+.stat-card{padding:20px;min-height:130px;position:relative}
+.stat-card h3{font-size:15px;color:var(--gray);margin-bottom:12px}
+.stat-card p{font-size:30px;font-weight:600;color:var(--dark)}
+.stat-icon{position:absolute;right:20px;top:20px;font-size:35px;opacity:.16}
+.card{padding:20px}
+.card h2{font-size:20px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #eee}
+.user-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.user-card{border:1px solid #eee;border-radius:9px;padding:14px;background:#fff}
+.user-header{display:flex;justify-content:space-between;gap:8px;margin-bottom:10px}
+.user-header h3{font-size:15px;word-break:break-word}
+.user-status{font-size:11px;padding:4px 7px;border-radius:10px;white-space:nowrap}
+.user-status.active{background:#e7f8fb;color:#1597c4}
+.user-status.inactive{background:#fde9f1;color:#d91b69}
+.user-details{font-size:13px;color:var(--gray)}
+.user-detail{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px}
+.user-detail strong{color:var(--dark)}
+.user-detail span{text-align:right;word-break:break-word}
+.loading,.no-users{text-align:center;color:var(--gray);padding:25px;grid-column:1/-1}
+.maintenance-overlay{position:fixed;inset:0;background:#fffffff7;z-index:2000;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px}
+.maintenance-overlay h2{color:var(--primary);margin-bottom:15px}
+.maintenance-overlay p{color:var(--gray);max-width:500px;margin-bottom:8px}
+.overlay{display:none;position:fixed;inset:64px 0 0;background:#0005;z-index:850}
+.overlay.active{display:block}
+@media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){
+.header-title span{display:none}
+.sidebar{left:-250px}
+.sidebar.active{left:0}
+.main-content,.main-content.full-width{margin-left:0;padding:18px 12px}
+.stats-grid{grid-template-columns:1fr;gap:12px}
+.page-title{font-size:20px}
+.container{padding:0 5px}
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="container">
+    <div class="header-left">
+      <button class="btn btn-icon" id="sidebarToggle" type="button" aria-label="Menu">
+        <span class="menu-icon">☰</span>
+      </button>
+      <h1 class="header-title"><span>⚙</span><span>Admin Dashboard</span></h1>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-icon" type="button" aria-label="Notifications">🔔</button>
+      <img src="logo.png" alt="Admin" width="40" height="40" style="border-radius:50%;object-fit:cover">
+    </div>
+  </div>
+</header>
+
+<div class="overlay" id="sidebarOverlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <ul class="sidebar-menu">
+    <li><a href="index.html" class="sidebar-link active"><span>📊</span><span>Dashboard</span></a></li>
+    <li><a href="admin.html" class="sidebar-link"><span>➕</span><span>Add User</span></a></li>
+    <li><a href="dashboard.html" class="sidebar-link"><span>👥</span><span>Manage Users</span></a></li>
+    <li><a href="settings.html" class="sidebar-link"><span>⚙️</span><span>Settings</span></a></li>
+  </ul>
+</aside>
+
+<main class="main-content" id="mainContent">
+  <div class="container">
+    <h1 class="page-title"><span class="page-title-icon">📊</span>Dashboard Overview</h1>
+
+    <div class="stats-grid">
+      <div class="stat-card"><h3>Total Users</h3><p id="totalUsers">0</p><span class="stat-icon">👥</span></div>
+      <div class="stat-card"><h3>Active Users</h3><p id="activeUsers">0</p><span class="stat-icon">✓</span></div>
+      <div class="stat-card"><h3>Inactive Users</h3><p id="inactiveUsers">0</p><span class="stat-icon">⊘</span></div>
+      <div class="stat-card"><h3>Today's Logins</h3><p id="todayLogins">0</p><span class="stat-icon">↪</span></div>
+    </div>
+
+    <div class="card">
+      <h2>User List</h2>
+      <div id="userList" class="user-list">
+        <div class="loading">Loading users...</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="maintenanceOverlay" class="maintenance-overlay" style="display:none">
+  <h2>🛠 Site Under Maintenance</h2>
+  <p>We're currently performing some essential updates to improve your experience.</p>
+  <p>Please check back shortly.</p>
+</div>
+
+<script>
+const sidebarToggle=document.getElementById("sidebarToggle");
+const sidebar=document.getElementById("sidebar");
+const mainContent=document.getElementById("mainContent");
+const overlay=document.getElementById("sidebarOverlay");
+
+function closeMenu(){
+  sidebar.classList.remove("active");
+  mainContent.classList.remove("full-width");
+  overlay.classList.remove("active");
+}
+sidebarToggle.addEventListener("click",()=>{
+  sidebar.classList.toggle("active");
+  mainContent.classList.toggle("full-width");
+  overlay.classList.toggle("active");
+});
+overlay.addEventListener("click",closeMenu);
+document.querySelectorAll(".sidebar-link").forEach(link=>{
+  link.addEventListener("click",()=>{if(innerWidth<=768)closeMenu()});
+});
+</script>
+
+<script type="module">
+import { db } from "./firebase-config.js";
+import { ref, onValue } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+
+const maintenanceOverlay=document.getElementById("maintenanceOverlay");
+const header=document.querySelector(".header");
+
+onValue(ref(db,"settings/maintenanceMode"),snapshot=>{
+  const maintenance=!!snapshot.val();
+  maintenanceOverlay.style.display=maintenance?"flex":"none";
+  header.style.display=maintenance?"none":"block";
+  document.getElementById("sidebar").style.display=maintenance?"none":"block";
+  document.getElementById("mainContent").style.display=maintenance?"none":"block";
+  if(!maintenance) loadUserData();
+});
+
+function loadUserData(){
+  onValue(ref(db,"userinfo/"),snapshot=>{
+    const data=snapshot.val();
+    let total=0,active=0,inactive=0;
+    if(data){
+      Object.values(data).forEach(user=>{
+        total++;
+        if(user.status==="active") active++; else inactive++;
+      });
+      renderUserList(data);
+    }else{
+      document.getElementById("userList").innerHTML='<div class="no-users">No users found</div>';
+    }
+    document.getElementById("totalUsers").textContent=total;
+    document.getElementById("activeUsers").textContent=active;
+    document.getElementById("inactiveUsers").textContent=inactive;
+    document.getElementById("todayLogins").textContent=0;
+  });
+}
+
+function renderUserList(users){
+  const list=document.getElementById("userList");
+  list.innerHTML="";
+  Object.entries(users).forEach(([username,user])=>{
+    const card=document.createElement("div");
+    card.className="user-card";
+    const status=user.status||"inactive";
+    card.innerHTML=`
+      <div class="user-header">
+        <h3>${escapeHtml(username)}</h3>
+        <span class="user-status ${status}">● ${escapeHtml(status)}</span>
+      </div>
+      <div class="user-details">
+        <div class="user-detail"><strong>Valid Until:</strong><span>${escapeHtml(user.validity||"N/A")}</span></div>
+        <div class="user-detail"><strong>Access:</strong><span>${user.access==="∞"?"Unlimited Devices":"1 Device"}</span></div>
+        <div class="user-detail"><strong>Registered:</strong><span>${escapeHtml(user.rgtime||"N/A")}</span></div>
+      </div>`;
+    list.appendChild(card);
+  });
+}
+function escapeHtml(value){
+  return String(value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+}
+</script>
+</body>
+</html>
